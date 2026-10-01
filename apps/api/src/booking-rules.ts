@@ -42,7 +42,7 @@ export function validateInterval(i: Interval): string | null {
 }
 
 export function overlaps(a: Interval, b: Interval): boolean {
-  return a.start <= b.end && b.start <= a.end;
+  return a.start < b.end && b.start < a.end;
 }
 
 export function freeSlots(date: string, bookings: Booking[]): FreeSlot[] {
