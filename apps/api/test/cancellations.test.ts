@@ -18,6 +18,15 @@ describe('DELETE /api/bookings/:id', () => {
     expect(ids).not.toContain(1);
   });
 
+  it('refuses a member who did not make the booking, and keeps it', async () => {
+    const { app, res } = cancel('/api/bookings/1', { 'x-member-id': '2' });
+    const done = await res;
+    expect(done.statusCode).toBe(403);
+    expect(done.json()).toEqual({ error: 'Only the member who made a booking can cancel it' });
+    const list = await app.inject({ method: 'GET', url: '/api/bookings' });
+    expect(list.json().map((b: { id: number }) => b.id)).toContain(1);
+  });
+
   it('frees the slot in the room once cancelled', async () => {
     const { app, res } = cancel('/api/bookings/1');
     await res;
