@@ -15,13 +15,15 @@ export type CommitGroups = {
   other: ParsedCommit[];
 };
 
-const SUBJECT = /^([a-z]+)(?:\(([^()\s]+)\))?: (\S.*)$/;
+const SUBJECT = /^([a-z]+)(?:\(([^()\s]+)\))?(!)?: (\S.*)$/;
+const BREAKING_FOOTER = /^BREAKING[ -]CHANGE: /m;
 
 export function parseCommit(c: Commit): ParsedCommit | null {
   const match = SUBJECT.exec(c.subject.trim());
   if (!match) return null;
-  const [, type, scope, description] = match;
-  return { type, scope: scope ?? null, description, breaking: false, hash: c.hash };
+  const [, type, scope, bang, description] = match;
+  const breaking = bang === '!' || BREAKING_FOOTER.test(c.body);
+  return { type, scope: scope ?? null, description, breaking, hash: c.hash };
 }
 
 export function groupCommits(commits: Commit[]): CommitGroups {

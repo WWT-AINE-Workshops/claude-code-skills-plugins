@@ -4,6 +4,33 @@ import { groupCommits, parseCommit, type Commit } from '../src/changelog';
 const commit = (hash: string, subject: string, body = ''): Commit => ({ hash, subject, body });
 
 describe('parseCommit', () => {
+  it('marks a subject with ! as breaking', () => {
+    expect(parseCommit(commit('c3', 'feat(api)!: require X-Member-Id on bookings'))).toEqual({
+      type: 'feat',
+      scope: 'api',
+      description: 'require X-Member-Id on bookings',
+      breaking: true,
+      hash: 'c3',
+    });
+  });
+
+  it.each([
+    'BREAKING CHANGE: clients must send a header',
+    'BREAKING-CHANGE: clients must send a header',
+  ])('marks a body footer %s as breaking', (footer) => {
+    const parsed = parseCommit(
+      commit('d4', 'feat: drop memberId from the body', `Why.\n\n${footer}`),
+    );
+    expect(parsed?.breaking).toBe(true);
+  });
+
+  it('does not mark a body that only mentions breaking changes', () => {
+    expect(
+      parseCommit(commit('e5', 'docs: explain breaking changes', 'See BREAKING CHANGE: below.'))
+        ?.breaking,
+    ).toBe(false);
+  });
+
   it('reads a feature with a scope', () => {
     expect(parseCommit(commit('a1', 'feat(api): add room search'))).toEqual({
       type: 'feat',
